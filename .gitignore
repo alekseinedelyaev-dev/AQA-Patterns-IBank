@@ -1,0 +1,43 @@
+
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Visual Studio Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
+# Test reports
+**/build/
