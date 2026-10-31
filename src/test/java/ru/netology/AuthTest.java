@@ -26,7 +26,7 @@ public class AuthTest {
         Configuration.baseUrl = "http://localhost:9999";
     }
 
-    // Тест 1. Активный пользователь с правильными данными
+    // Тест 1. Успешная авторизация активного пользователя
     @Test
     void shouldLoginWithActiveUser() {
         RegistrationDto user = DataGenerator.getActiveUser();
@@ -37,7 +37,7 @@ public class AuthTest {
                 .shouldBe(visible, Duration.ofSeconds(15));
     }
 
-    // Тест 2. Заблокированный пользователь с правильными данными
+    // Тест 2. Заблокированный пользователь
     @Test
     void shouldNotLoginWithBlockedUser() {
         RegistrationDto user = DataGenerator.getBlockedUser();
@@ -52,9 +52,10 @@ public class AuthTest {
     void shouldNotLoginWithWrongPassword() {
         RegistrationDto user = DataGenerator.getActiveUser();
 
-        String wrongPassword = "wrong" + user.getPassword();
-
-        login(user.getLogin(), wrongPassword);
+        login(
+                user.getLogin(),
+                DataGenerator.generateWrongPassword(user.getPassword())
+        );
 
         checkLoginError(INVALID_CREDENTIALS);
     }
@@ -64,9 +65,10 @@ public class AuthTest {
     void shouldNotLoginWithWrongLogin() {
         RegistrationDto user = DataGenerator.getActiveUser();
 
-        String wrongLogin = user.getLogin() + "wrong";
-
-        login(wrongLogin, user.getPassword());
+        login(
+                DataGenerator.generateWrongLogin(user.getLogin()),
+                user.getPassword()
+        );
 
         checkLoginError(INVALID_CREDENTIALS);
     }
@@ -74,8 +76,7 @@ public class AuthTest {
     // Тест 5. Незарегистрированный пользователь
     @Test
     void shouldNotLoginWithUnregisteredUser() {
-        // Создаём данные, но не отправляем их через API
-        RegistrationDto user = DataGenerator.generateUser("active");
+        RegistrationDto user = DataGenerator.getUnregisteredUser();
 
         login(user.getLogin(), user.getPassword());
 
@@ -87,9 +88,10 @@ public class AuthTest {
     void shouldNotLoginBlockedUserWithWrongPassword() {
         RegistrationDto user = DataGenerator.getBlockedUser();
 
-        String wrongPassword = "wrong" + user.getPassword();
-
-        login(user.getLogin(), wrongPassword);
+        login(
+                user.getLogin(),
+                DataGenerator.generateWrongPassword(user.getPassword())
+        );
 
         checkLoginError(INVALID_CREDENTIALS);
     }
@@ -99,27 +101,29 @@ public class AuthTest {
     void shouldNotLoginBlockedUserWithWrongLogin() {
         RegistrationDto user = DataGenerator.getBlockedUser();
 
-        String wrongLogin = user.getLogin() + "wrong";
-
-        login(wrongLogin, user.getPassword());
+        login(
+                DataGenerator.generateWrongLogin(user.getLogin()),
+                user.getPassword()
+        );
 
         checkLoginError(INVALID_CREDENTIALS);
     }
 
-    // Тест 8. Активный пользователь с неверным логином и паролем
+    // Тест 8. Активный пользователь с неправильными
+    // логином и паролем
     @Test
     void shouldNotLoginWithWrongLoginAndPassword() {
         RegistrationDto user = DataGenerator.getActiveUser();
 
-        String wrongLogin = user.getLogin() + "wrong";
-        String wrongPassword = "wrong" + user.getPassword();
-
-        login(wrongLogin, wrongPassword);
+        login(
+                DataGenerator.generateWrongLogin(user.getLogin()),
+                DataGenerator.generateWrongPassword(user.getPassword())
+        );
 
         checkLoginError(INVALID_CREDENTIALS);
     }
 
-    // Общий метод заполнения формы авторизации
+    // Общий метод авторизации
     private void login(String login, String password) {
         open("/");
 
@@ -132,24 +136,12 @@ public class AuthTest {
         $("[data-test-id='action-login']").click();
     }
 
-    // Проверка ошибки авторизации
+    // Проверка сообщения об ошибке авторизации
     private void checkLoginError(String expectedError) {
-
         $(".notification__content")
                 .shouldBe(visible, Duration.ofSeconds(15))
-                .shouldNotBe(empty);
-
-        String actualError =
-                $(".notification__content").getText();
-
-        // Выводим реальное сообщение для анализа
-        System.out.println("Сообщение банка: " + actualError);
-
-        // Проверяем ожидаемое сообщение
-        $(".notification__content")
                 .shouldHave(text(expectedError));
 
-        // Убеждаемся, что личный кабинет не открылся
         $(byText("Личный кабинет"))
                 .shouldNotBe(visible);
     }

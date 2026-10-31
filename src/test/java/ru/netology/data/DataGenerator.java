@@ -2,7 +2,6 @@
 package ru.netology.data;
 
 import com.github.javafaker.Faker;
-import com.google.gson.Gson;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
@@ -17,8 +16,6 @@ public class DataGenerator {
     private static final Faker faker =
             new Faker(new Locale("en"));
 
-    private static final Gson gson = new Gson();
-
     private static final RequestSpecification requestSpec =
             new RequestSpecBuilder()
                     .setBaseUri("http://localhost")
@@ -30,18 +27,40 @@ public class DataGenerator {
     private DataGenerator() {
     }
 
-    // Создаём случайный логин
+    // Генерация случайного логина
     public static String generateLogin() {
         return faker.name().username()
                 + UUID.randomUUID().toString().substring(0, 8);
     }
 
-    // Создаём случайный пароль
+    // Генерация случайного пароля
     public static String generatePassword() {
         return faker.internet().password(8, 16);
     }
 
-    // Генерируем пользователя с нужным статусом
+    // Генерация неправильного логина
+    public static String generateWrongLogin(String correctLogin) {
+        String wrongLogin;
+
+        do {
+            wrongLogin = generateLogin();
+        } while (wrongLogin.equals(correctLogin));
+
+        return wrongLogin;
+    }
+
+    // Генерация неправильного пароля
+    public static String generateWrongPassword(String correctPassword) {
+        String wrongPassword;
+
+        do {
+            wrongPassword = generatePassword();
+        } while (wrongPassword.equals(correctPassword));
+
+        return wrongPassword;
+    }
+
+    // Генерация пользователя с указанным статусом
     public static RegistrationDto generateUser(String status) {
         return new RegistrationDto(
                 generateLogin(),
@@ -50,28 +69,33 @@ public class DataGenerator {
         );
     }
 
-    // Отправляем пользователя в банк через API
+    // Регистрация пользователя через API банка
     public static void registerUser(RegistrationDto user) {
         given()
                 .spec(requestSpec)
-                .body(gson.toJson(user))
+                .body(user)
                 .when()
                 .post("/api/system/users")
                 .then()
                 .statusCode(200);
     }
 
-    // Создаём и регистрируем активного пользователя
+    // Создание и регистрация активного пользователя
     public static RegistrationDto getActiveUser() {
         RegistrationDto user = generateUser("active");
         registerUser(user);
         return user;
     }
 
-    // Создаём и регистрируем заблокированного пользователя
+    // Создание и регистрация заблокированного пользователя
     public static RegistrationDto getBlockedUser() {
         RegistrationDto user = generateUser("blocked");
         registerUser(user);
         return user;
+    }
+
+    // Генерация незарегистрированного пользователя
+    public static RegistrationDto getUnregisteredUser() {
+        return generateUser("active");
     }
 }

@@ -24,15 +24,5 @@ jobs:
       - name: Start IBank in test mode
         run: java -jar ./artifacts/app-ibank.jar -P:profile=test &
 
-      - name: Wait for application
-        run: |
-          for i in {1..30}; do
-            if curl -fsS http://localhost:9999/ -o /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          exit 1
-
       - name: Run Selenide tests
         run: bash ./gradlew test --info -Dselenide.headless=true
